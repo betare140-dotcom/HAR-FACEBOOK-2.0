@@ -4,7 +4,19 @@ const $=id=>document.getElementById(id);
 const PAGE_SIZE=50;
 
 function status(id,text,type=''){const e=$(id);if(e){e.className='status '+type;e.textContent=text;}}
-function esc(value){return String(value??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+// Función reescrita para no chocar con las comillas de Python (Streamlit)
+function esc(value){
+ if(value==null)return '';
+ let s=String(value);
+ s=s.split('&').join('&amp;');
+ s=s.split('<').join('&lt;');
+ s=s.split('>').join('&gt;');
+ s=s.split('"').join('&quot;');
+ s=s.split("'").join('&#39;');
+ return s;
+}
+
 function lock(busy){
  state.busy=busy;
  for(const id of ['extractBtn','harFile','account','applyBtn','startDate','endDate','maxPosts','ownAccount','description','includeSaved','classifyBtn','savedBtn','restoreFile','correctionsFile','forceAI','concurrency','rpm','extraCriteria','governorHandles','governmentHandles','governorHashtags','governmentHashtags']) if($(id))$(id).disabled=busy;
@@ -14,8 +26,7 @@ function lock(busy){
 function currentProfile(){return state.profiles.find(p=>p.id===$('account')?.value);}
 function profileOptions(){
  const act = $('account'); if(!act) return;
- const old=act.value;
- act.replaceChildren();
+ const old=act.value; act.replaceChildren();
  for(const p of state.profiles){const o=document.createElement('option');o.value=p.id;o.textContent=`${p.name} (${p.count})`;act.appendChild(o);}
  if(state.profiles.some(p=>p.id===old)) act.value=old;
  const p=currentProfile();
@@ -29,17 +40,14 @@ function options(){
 
 async function prepare(){
  await state.pendingEdits;
- const profile=currentProfile();
- if(!profile)throw Error('Selecciona una cuenta.');
+ const profile=currentProfile(); if(!profile)throw Error('Selecciona una cuenta.');
  const saved=await FBReport.stored(profile.handle),all=new Map();
  if($('includeSaved')?.checked)for(const p of saved)all.set(String(p.id),p);
  const previous=new Map(saved.map(p=>[String(p.id),p]));
  for(const p of state.available.filter(p=>p.authorId===profile.id))all.set(String(p.id),ExtractorFacebookData.merge(previous.get(String(p.id)),p));
  state.data=FBReport.select([...all.values()].map(p=>({...p,overrides:previous.get(String(p.id))?.overrides,aiFingerprint:previous.get(String(p.id))?.aiFingerprint,aiResult:previous.get(String(p.id))?.aiResult})),profile,options());
  state.data.posts=await Promise.all(state.data.posts.map(async p=>p.aiResult&&p.aiFingerprint===await ExtractorAIClient.fingerprint(p,state.data.settings)&&!p.aiResult.imageAnalysisMissing?FBReport.apply(ExtractorReportAI.mergeAIResult(p,p.aiResult)):p));
- state.page=0;
- await FBReport.save(state.data.metadata,state.data.posts);
- render();
+ state.page=0; await FBReport.save(state.data.metadata,state.data.posts); render();
  status('extractStatus',`${state.data.posts.length} publicaciones de ${profile.name}. Periodo ${state.data.metadata.from} a ${state.data.metadata.to}. ${state.diag.errores?.length?state.diag.errores.join(' '):''}`,'ok');
 }
 function select(field,value,i){const values=field==='format'?ExtractorXCore.FORMATS:ExtractorXCore.BELONGINGS;return `<select data-field="${field}" data-i="${i}" ${state.busy?'disabled':''}>${values.map(v=>`<option ${v===value?'selected':''}>${esc(v)}</option>`).join('')}</select>`;}
@@ -68,8 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if($('savedBtn'))$('savedBtn').addEventListener('click',async()=>{lock(true);try{const {profiles}=await FBReport.dispatch('profiles');const posts=[];for(const p of profiles.filter(p=>p.platform==='facebook'))posts.push(...await FBReport.stored(p.handle));if(!posts.length)throw Error('Aún no hay publicaciones guardadas en este navegador.');state.available=posts;state.profiles=FBHarExtractor.profiles(posts);profileOptions();await prepare();}catch(e){status('extractStatus',e.message,'error');}finally{lock(false);render();}});
     
     async function classify(){
-        const key=$('apiKey')?.value.trim();
-        if(key) localStorage.setItem('geminiApiKey', key);
+        const key=$('apiKey')?.value.trim(); if(key) localStorage.setItem('geminiApiKey', key);
         if(!state.data?.posts.length||!key){status('aiStatus','Prepara el reporte e ingresa tu clave de Gemini.','error');return;}
         const rpm=Number($('rpm')?.value||0);if(!Number.isInteger(rpm)||rpm<1||rpm>120){status('aiStatus','La frecuencia debe estar entre 1 y 120.','error');return;}
         lock(true);state.finish=false;render();
