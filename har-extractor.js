@@ -7,7 +7,7 @@ async function extractFiles(files,start='',end='',progress=null){
  for(let i=0;i<files.length;i++){
   const file=files[i];progress?.(`Leyendo ${file.name} (${i+1}/${files.length})…`);
   try{
-   if(file.size>150*1024*1024)throw Error('El archivo supera 150 MB. Divídelo en capturas más cortas.');
+   if(file.size>500*1024*1024)throw Error('El archivo supera 500 MB. Divídelo en capturas más cortas.');
    const text=(await file.text()).replace(/^\uFEFF/,''),har=JSON.parse(text);
    if(!Array.isArray(har?.log?.entries))throw Error('No tiene una estructura HAR válida.');
    const parsed=global.ExtractorFacebookData.fromHAR(har);
