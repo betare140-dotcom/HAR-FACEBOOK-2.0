@@ -1,0 +1,23 @@
+ACTUALIZACIÓN PARA GITHUB + STREAMLIT — v4.1
+
+No basta con cambiar solamente app.py para esta actualización.
+
+1. Descomprime el ZIP.
+2. Sube EL CONTENIDO de la carpeta al mismo nivel en el repositorio:
+   app.py, web_bundle.py, requirements.txt, index.html, todos los .js,
+   styles.css y la carpeta .streamlit. Conserva las carpetas del paquete.
+3. En Streamlit Community Cloud selecciona el repositorio, su rama
+   y app.py como archivo principal (Main file path).
+4. Si la aplicación ya existe, confirma que ejecuta app.py y reiníciala
+   después de guardar los cambios si todavía muestra la versión anterior.
+
+Puedes usar Python 3.11 o superior. Para ejecutar en tu equipo:
+   python -m pip install -r requirements.txt
+   python -m streamlit run app.py
+
+La carga del HAR, clasificación con Gemini, correcciones y descargas se
+realizan dentro de la aplicación. No necesita Node ni un comando para
+compilar JavaScript. No subas tus HAR, respaldos personales o API keys.
+
+index.html sigue disponible para abrir la versión directa en Chrome.
+Streamlit utiliza los mismos módulos y el mismo Excel.

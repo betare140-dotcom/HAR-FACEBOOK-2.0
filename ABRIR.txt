@@ -1,0 +1,9 @@
+EXTRACTOR FACEBOOK HAR + IA — v4.1
+
+Para GITHUB Y STREAMLIT: sigue SUBIR_A_GITHUB.txt. Sube todo el paquete;
+selecciona app.py como archivo principal. No basta con cambiar app.py.
+
+Para abrir directamente en CHROME: descomprime todo y abre index.html.
+
+Se conservan clasificación, correcciones, guardado y Excel de la versión 4.0.
+El reporte contiene Publicaciones y Estadísticas, como la extensión v1.29.
