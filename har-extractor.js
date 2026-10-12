@@ -1,6 +1,5 @@
 (function(global){
 'use strict';
-const legacy=global.FBHarExtractor;
 async function extractFiles(files,start='',end='',progress=null){
  if(start&&end)global.ExtractorXCore.parseDateRange(start,end);
  const unique=new Map(),diag={archivos:[],entradas_har:0,respuestas:0,documentos:0,duplicados:0,errores:[]};
@@ -11,11 +10,18 @@ async function extractFiles(files,start='',end='',progress=null){
    const text=(await file.text()).replace(/^\uFEFF/,''),har=JSON.parse(text);
    if(!Array.isArray(har?.log?.entries))throw Error('No tiene una estructura HAR válida.');
    const parsed=global.ExtractorFacebookData.fromHAR(har);
-   // El parser anterior conserva únicamente sus métricas complementarias.
-   // Autor, fecha, texto y medios proceden del mismo parser que la extensión.
-   const metrics=new Map((await legacy.extractFiles([{name:file.name,text:async()=>text}])).rows.map(p=>[String(p.post_id),p]));
-   diag.entradas_har+=har.log.entries.length;diag.respuestas+=parsed.responses;diag.documentos+=parsed.documents;diag.archivos.push({nombre:file.name,publicaciones:parsed.posts.length,respuestas:parsed.responses});
-   for(const raw of parsed.posts){const old=metrics.get(String(raw.id)),post={...raw,captureSource:'HAR importado',sourceFile:file.name,reacciones:old?.reacciones??null,comentarios:old?.comentarios??null,compartidos:old?.compartidos??null},key=post.authorId+':'+post.id;if(unique.has(key))diag.duplicados++;unique.set(key,global.ExtractorFacebookData.merge(unique.get(key),post));}
+   
+   diag.entradas_har+=har.log.entries.length;
+   diag.respuestas+=parsed.responses;
+   diag.documentos+=parsed.documents;
+   diag.archivos.push({nombre:file.name,publicaciones:parsed.posts.length,respuestas:parsed.responses});
+   
+   for(const raw of parsed.posts){
+    const post={...raw,captureSource:'HAR importado',sourceFile:file.name};
+    const key=post.authorId+':'+post.id;
+    if(unique.has(key))diag.duplicados++;
+    unique.set(key,global.ExtractorFacebookData.merge(unique.get(key),post));
+   }
   }catch(e){diag.errores.push(`${file.name}: ${e.message}`);}
   await new Promise(r=>setTimeout(r,0));
  }
